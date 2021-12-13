@@ -1,0 +1,17 @@
+namespace: snakems
+name: ansible
+version: 1.0.0
+readme: README.md
+authors:
+- Mironenko Sergey <sergey@mironenko.pp.ua>
+description: null
+license:
+- GPL-2.0-or-later
+license_file: ''
+tags: [snakems, keepass]
+dependencies: {}
+repository: https://github.com/snakems/snakems.ansible
+documentation: https://github.com/snakems/snakems.ansible/tree/main/docs
+homepage: https://github.com/snakems/snakems.ansible
+issues: https://github.com/snakems/snakems.ansible/issues
+build_ignore: []
