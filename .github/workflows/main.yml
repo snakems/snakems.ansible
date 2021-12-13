@@ -23,6 +23,6 @@ jobs:
     # Steps represent a sequence of tasks that will be executed as part of the job
     steps:
       - name: Build and Deploy Collection
-        uses: artis3n/ansible_galaxy_collection@v2
+        uses: docker://ghcr.io/artis3n/ansible_galaxy_collection@v2.4.2
         with:
           api_key: '${{ secrets.GALAXY_API_KEY }}'
