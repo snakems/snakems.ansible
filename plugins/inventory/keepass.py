@@ -58,43 +58,45 @@ from pykeepass.exceptions import CredentialsError, HeaderChecksumError, PayloadC
 from urllib.parse import urlparse
 import re
 
+
 class InventoryModule(BaseInventoryPlugin, Constructable, Cacheable):
 
-    NAME = 'keepass'  # used internally by Ansible, it should match the file name but not required
-    CONFIG = {}  #For store CONFIG values
+    NAME = 'keepass'
+    # For store CONFIG values
+    CONFIG = {}
 
     def _add_host(self, entry, group_name):
         """ Add host with vars to the group """
-        hostname=entry.title
+        hostname = entry.title
         # Check if hostname 'group_vars' then add custom properties to vars for selected group
-        if hostname == "group_vars" and len(entry.custom_properties)>0:
+        if hostname == "group_vars" and len(entry.custom_properties) > 0:
             for group_var in entry.custom_properties:
-                 self.inventory.set_variable(group_name, group_var, entry.custom_properties[group_var])
+                self.inventory.set_variable(group_name, group_var, entry.custom_properties[group_var])
             return
         # Add host to group
         self.inventory.add_host(hostname, group=group_name)
-        #Determine and add vars to host
+        # Determine and add vars to host
         self.inventory.set_variable(hostname, "ansible_user", entry.username)
         self.inventory.set_variable(hostname, "ansible_password", entry.password)
-        #Determine connection type, host,, port
-        host_url=entry.url
+        # Determine connection type, host,, port
+        host_url = entry.url
         if not re.match('^.*?://', entry.url, flags=re.IGNORECASE):
-            host_url=f"ssh://{host_url}"
-        host_data=urlparse(host_url)
+            host_url = f"ssh://{host_url}"
+        host_data = urlparse(host_url)
         self.inventory.set_variable(hostname, "ansible_connection", host_data.scheme)
         self.inventory.set_variable(hostname, "ansible_host", host_data.hostname)
-        if host_data.port != None:
+        if host_data.port is not None:
             self.inventory.set_variable(hostname, "ansible_port", host_data.port)
         # Check additional vars for host
-        if len(entry.custom_properties)>0:
+        if len(entry.custom_properties) > 0:
             for host_var in entry.custom_properties:
-                 self.inventory.set_variable(hostname, host_var, entry.custom_properties[host_var])
+                self.inventory.set_variable(hostname, host_var, entry.custom_properties[host_var])
 
     def _add_group(self, group, parent=None):
         """ Add group with children hosts to inventrory."""
-        group_name=group.name
+        group_name = group.name
         self.inventory.add_group(group_name)
-        if parent != None:
+        if parent is not None:
             self.inventory.add_child(parent, group_name)
         for sub_group in group.subgroups:
             self._add_group(sub_group, group_name)
@@ -109,13 +111,13 @@ class InventoryModule(BaseInventoryPlugin, Constructable, Cacheable):
             if path.endswith(('keepass.yaml', 'keepass.yml', 'keepass_hosts.yaml', 'keepass_hosts.yml')):
                 valid = True
         return valid
-    
+
     def parse(self, inventory, loader, path, cache=False):
         super(InventoryModule, self).parse(inventory, loader, path, cache)
         self.CONFIG = self._read_config_data(path)
         if "keepass_database" not in self.CONFIG:
             raise AnsibleError("'keepass_database' must be set in config")
-        if  "keepass_root" not in self.CONFIG:
+        if "keepass_root" not in self.CONFIG:
             raise AnsibleError("'keepass_root' must be set in config")
         kp = None
         keepass_pass = ""
