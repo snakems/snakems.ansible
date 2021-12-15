@@ -1,4 +1,4 @@
-![deploy](https://github.com/snakems/snakems.ansible/actions/workflows/main.yml/badge.svg)
+[![License](https://img.shields.io/github/license/snakems/snakems.ansible.svg?style=flat)](https://github.com/snakems/snakems.ansible/blob/master/LICENSE) ![deploy](https://github.com/snakems/snakems.ansible/actions/workflows/main.yml/badge.svg) [![galaxy](https://img.shields.io/badge/galaxy-snakems.ansible-660198.svg?style=flat)](https://galaxy.ansible.com/snakems/ansible)  
 # Ansible Collection - snakems.ansible
 
 My collection ansible plugins and modules.
@@ -23,7 +23,7 @@ This collection requires Python 3.6 or greater.
 ### Inventory plugins
 Name | Description
 --- | ---
-[snakems.ansible.keepass](https://github.com/snakems/snakems.ansible/blob/master/docs/snakems.ansible.keepass_inventory.md)|KeePass inventory source        
+[snakems.ansible.keepass_inventory](https://github.com/snakems/snakems.ansible/blob/master/docs/snakems.ansible.keepass_inventory.md)|KeePass inventory source        
 
 ## Installing this collection
 

@@ -1,4 +1,4 @@
-# snakems.ansible.keepass
+# snakems.ansible.keepass_inventory
 ### KeePass inventory source
 - [Synopsis](#synopsis)
 - [Requirements](#requirements)
@@ -26,25 +26,25 @@ keepass_root|Yes|Directory in KeePass Database from which to take hosts
 [defaults]
 inventory = ./keepass_hosts.yaml
 [inventory]
-enable_plugins = keepass
+enable_plugins = keepass_inventory
 ```
 ### Config keepass_hosts.yaml
 ```
 # Minimal example using environment vars or instance role credentials
 # Fetch all hosts in root ansible. Password will be prompted
-plugin: keepass
+plugin: keepass_inventory
 keepass_database: "test.kdbx"
 keepass_root: "ansible"
 
 # Example using key and predefined password. Set password in config not recommended
-plugin: keepass
+plugin: keepass_inventory
 keepass_database: "test.kdbx"
 keepass_pass: "123456"
 keepass_key: "test.key"
 keepass_root: "ansible"
 
 # Example using encrypted password by ansible-vault
-plugin: keepass
+plugin: keepass_inventory
 keepass_database: "test.kdbx"
 keepass_pass: !vault |
           $ANSIBLE_VAULT;1.1;AES256
@@ -64,7 +64,7 @@ Use one of the options to add host data in field URL
 <protocol>://<host>:<port>
 # if protocol not set, by default using 'ssh'
 <host>:<port> 
-# if port not, by default using default port for selected protocol
+# if port not set, by default using default port for selected protocol
 <protocol>://<host>
 <host>
 

@@ -1,9 +1,15 @@
+#!/usr/bin/python
+# -*- coding: utf-8 -*-
+
+# Copyright: (c) 2021, Mironenko Sergey <sergey@mironenko.pp.ua>
+# GNU General Public License v3.0+ (see COPYING or https://www.gnu.org/licenses/gpl-3.0.txt)
+
 from __future__ import (absolute_import, division, print_function)
 
 __metaclass__ = type
 
 DOCUMENTATION = '''
-    name: keepass
+    name: keepass_inventory
     plugin_type: inventory
     short_description: KeePass inventory source
     requirements:
@@ -17,7 +23,7 @@ DOCUMENTATION = '''
         plugin:
             description: Token that ensures this is a source file for the plugin.
             required: True
-            choices: ['keepass', 'snakems.ansible.keepass']
+            choices: ['keepass_inventory', 'snakems.ansible.keepass_inventory']
         keepass_database:
             description: Path to KeePass database
             required: True
@@ -33,19 +39,19 @@ DOCUMENTATION = '''
 EXAMPLES = '''
 # Minimal example using environment vars or instance role credentials
 # Fetch all hosts in root ansible. Password will be prompted
-plugin: keepass
+plugin: keepass_inventory
 keepass_database: "test.kdbx"
 keepass_root: "ansible"
 
 # Example using key and predefined password. Set password in config not recommended
-plugin: keepass
+plugin: keepass_inventory
 keepass_database: "test.kdbx"
 keepass_pass: "123456"
 keepass_key: "test.key"
 keepass_root: "ansible"
 
 # Example using encrypted password by ansible-vault
-plugin: keepass
+plugin: keepass_inventory
 keepass_database: "test.kdbx"
 keepass_pass: !vault |
           $ANSIBLE_VAULT;1.1;AES256
@@ -74,7 +80,7 @@ import re
 
 class InventoryModule(BaseInventoryPlugin, Constructable, Cacheable):
 
-    NAME = 'keepass'
+    NAME = 'keepass_inventory'
     # For store CONFIG values
     CONFIG = {}
 
