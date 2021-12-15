@@ -23,7 +23,7 @@ This collection requires Python 3.6 or greater.
 ### Inventory plugins
 Name | Description
 --- | ---
-[snakems.ansible.keepass](https://github.com/snakems/snakems.ansible/blob/master/docs/snakems.ansible.keepass_inventory.md)|KeePass inventory source        
+[snakems.ansible.keepass_inventory](https://github.com/snakems/snakems.ansible/blob/master/docs/snakems.ansible.keepass_inventory.md)|KeePass inventory source        
 
 ## Installing this collection
 
