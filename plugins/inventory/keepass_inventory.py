@@ -27,13 +27,34 @@ DOCUMENTATION = '''
         keepass_database:
             description: Path to KeePass database
             required: True
+            ini:
+                - key: database
+                  section: keepass
+            env:
+                - name: ANSIBLE_KEEPASS_DATABASE
         keepass_key:
             description: Path to key-file. Set if needed
+            ini:
+                - key: key
+                  section: keepass
+            env:
+                - name: ANSIBLE_KEEPASS_KEY
         keepass_pass:
             description: Pasword for KeePass database. If not set, it will be prompted
+            ini:
+                - key: password
+                  section: keepass
+            env:
+                - name: ANSIBLE_KEEPASS_PASSWORD
+                - name: ANSIBLE_KEEPASS_PASS
         keepass_root:
             description: Directory from which to take hosts
             required: True
+            ini:
+                - key: root
+                  section: keepass
+            env:
+                - name: ANSIBLE_KEEPASS_ROOT
 '''
 
 EXAMPLES = '''
@@ -81,8 +102,6 @@ import re
 class InventoryModule(BaseInventoryPlugin, Constructable, Cacheable):
 
     NAME = 'keepass_inventory'
-    # For store CONFIG values
-    CONFIG = {}
 
     def _add_host(self, entry, group_name):
         """ Add host with vars to the group """
@@ -133,24 +152,25 @@ class InventoryModule(BaseInventoryPlugin, Constructable, Cacheable):
 
     def parse(self, inventory, loader, path, cache=False):
         super(InventoryModule, self).parse(inventory, loader, path, cache)
-        self.CONFIG = self._read_config_data(path)
-        if "keepass_database" not in self.CONFIG:
-            raise AnsibleError("'keepass_database' must be set in config")
-        if "keepass_root" not in self.CONFIG:
-            raise AnsibleError("'keepass_root' must be set in config")
+        self._read_config_data(path)
         kp = None
         keepass_pass = ""
-        if "keepass_pass" in self.CONFIG:
-            keepass_pass = self.CONFIG['keepass_pass']
+        if self.get_option("keepass_pass") is not None:
+            keepass_pass = self.get_option("keepass_pass")
         while True:
             if keepass_pass == "":
-                keepass_pass = getpass(prompt=f"Enter password for database {self.CONFIG['keepass_database']}: ")
+                keepass_pass = getpass(prompt="Enter password for database {}: ".format(self.get_option("keepass_database")))
             if keepass_pass != "":
                 try:
-                    if "keepass_key" in self.CONFIG:
-                        kp = PyKeePass(self.CONFIG['keepass_database'], password=keepass_pass, keyfile=self.CONFIG['keepass_key'])
+                    if self.loader._vault.is_encrypted(self.get_option("keepass_pass")):
+                        if len(self.loader._vault.secrets) > 0:
+                            keepass_pass = self.loader._vault.decrypt(self.get_option("keepass_pass").replace('\\n', '\n')).decode()
+                        else:
+                            raise AnsibleError("'keepass_pass' encrypted by vault, but vault-password not provided. Please use option --ask-vault-password")
+                    if self.get_option("keepass_key") is not None:
+                        kp = PyKeePass(self.get_option("keepass_database"), password=keepass_pass, keyfile=self.get_option("keepass_key"))
                     else:
-                        kp = PyKeePass(self.CONFIG['keepass_database'], password=keepass_pass)
+                        kp = PyKeePass(self.get_option("keepass_database"), password=keepass_pass)
                     break
                 except IOError:
                     display.error('Could not open the database or keyfile.')
@@ -162,7 +182,7 @@ class InventoryModule(BaseInventoryPlugin, Constructable, Cacheable):
                     display.error('Could not open the database, as the checksum of the database is wrong. This could be caused by a corrupt database.')
                 finally:
                     keepass_pass = ""
-        main_root = kp.find_groups(name=self.CONFIG['keepass_root'], first=True)
+        main_root = kp.find_groups(name=self.get_option("keepass_root"), first=True)
         for group in main_root.subgroups:
             self._add_group(group)
         for entry in main_root.entries:

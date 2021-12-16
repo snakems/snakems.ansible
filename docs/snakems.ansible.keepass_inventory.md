@@ -13,12 +13,12 @@ The below requirements are needed on the local Ansible controller node that exec
 - pykeepass
 
 ## Parameters
-Parammeter | Required | Description
---|--|--
-keepass_database|Yes|Path to KeePass database 
-keepass_key|No|Path to key-file.
-keepass_pass|No|Pasword for KeePass database. If not set, it will be prompted 
-keepass_root|Yes|Directory in KeePass Database from which to take hosts
+Parammeter | Required | Configuration | Description
+--|--|--|--
+keepass_database|Yes|ini entries:<br />[keepass]<br />database = VALUE<br /><br />env: ANSIBLE_KEEPASS_DATABASE|Path to KeePass database 
+keepass_key|No|ini entries:<br />[keepass]<br />key = VALUE<br /><br />env: ANSIBLE_KEEPASS_KEY|Path to key-file.
+keepass_pass|No|ini entries:<br />[keepass]<br />password = VALUE<br /><br />env: ANSIBLE_KEEPASS_PASSWORD<br />env: ANSIBLE_KEEPASS_PASS|Pasword for KeePass database. If not set, it will be prompted 
+keepass_root|Yes|ini entries:<br />[keepass]<br />root = VALUE<br /><br />env: ANSIBLE_KEEPASS_ROOT|Directory in KeePass Database from which to take hosts
 
 ## Using
 ### Config ansible.cfg
@@ -55,6 +55,19 @@ keepass_pass: !vault |
           6662
 keepass_key: "test.key"
 keepass_root: "ansible"
+
+# using .env
+ANSIBLE_KEEPASS_DATABASE = "test.kdbx"
+ANSIBLE_KEEPASS_KEY = "test.key"
+ANSIBLE_KEEPASS_ROOT = "ansible"
+ANSIBLE_KEEPASS_PASSWORD = "$ANSIBLE_VAULT;1.1;AES256\n35303030656130...6662"
+
+# using ansible.cfg
+[keepass]
+database = test.kdbx
+key = test.key
+root = ansible
+password = "$ANSIBLE_VAULT;1.1;AES256\n35303030656130...6662"
 ```
 ### KeePass Database
 ![Keepass Database example](screenshots/keepass_inventory.gif)
