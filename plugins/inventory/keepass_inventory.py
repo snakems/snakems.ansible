@@ -97,6 +97,7 @@ from pykeepass import PyKeePass
 from pykeepass.exceptions import CredentialsError, HeaderChecksumError, PayloadChecksumError
 from urllib.parse import urlparse
 import re
+from ..module_utils.keepass_helper import get_entry_path
 
 
 class InventoryModule(BaseInventoryPlugin, Constructable, Cacheable):
@@ -114,6 +115,7 @@ class InventoryModule(BaseInventoryPlugin, Constructable, Cacheable):
         # Add host to group
         self.inventory.add_host(hostname, group=group_name)
         # Determine and add vars to host
+        self.inventory.set_variable(hostname, "keepass_entry_path", get_entry_path(entry))
         self.inventory.set_variable(hostname, "ansible_user", entry.username)
         self.inventory.set_variable(hostname, "ansible_password", entry.password)
         # Determine connection type, host,, port

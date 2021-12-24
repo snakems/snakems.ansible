@@ -26,25 +26,25 @@ keepass_root|Yes|ini entries:<br />[keepass]<br />root = VALUE<br /><br />env: A
 [defaults]
 inventory = ./keepass_hosts.yaml
 [inventory]
-enable_plugins = keepass_inventory
+enable_plugins = snakems.ansible.keepass_inventory
 ```
 ### Config keepass_hosts.yaml
 ```
 # Minimal example using environment vars or instance role credentials
 # Fetch all hosts in root ansible. Password will be prompted
-plugin: keepass_inventory
+plugin: snakems.ansible.keepass_inventory
 keepass_database: "test.kdbx"
 keepass_root: "ansible"
 
 # Example using key and predefined password. Set password in config not recommended
-plugin: keepass_inventory
+plugin: snakems.ansible.keepass_inventory
 keepass_database: "test.kdbx"
 keepass_pass: "123456"
 keepass_key: "test.key"
 keepass_root: "ansible"
 
 # Example using encrypted password by ansible-vault
-plugin: keepass_inventory
+plugin: snakems.ansible.keepass_inventory
 keepass_database: "test.kdbx"
 keepass_pass: !vault |
           $ANSIBLE_VAULT;1.1;AES256
