@@ -25,6 +25,11 @@ Name | Description
 --- | ---
 [snakems.ansible.keepass_inventory](https://github.com/snakems/snakems.ansible/blob/master/docs/snakems.ansible.keepass_inventory.md)|KeePass inventory source        
 
+### Vars plugins
+Name | Description
+--- | ---
+[snakems.ansible.keepass_vars](https://github.com/snakems/snakems.ansible/blob/master/docs/snakems.ansible.keepass_vars.md)|KeePass variables data      
+
 ## Installing this collection
 
 You can install the collection with the Ansible Galaxy CLI:

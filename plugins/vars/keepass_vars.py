@@ -42,16 +42,16 @@ DOCUMENTATION = '''
             env:
                 - name: ANSIBLE_KEEPASS_PASSWORD
                 - name: ANSIBLE_KEEPASS_PASS
-        keepass_filter_title:
+        keepass_title_mask:
             description: "If entry not found by hostname, try search by mask. Macroses: {{ hostname }}"
             default: "{{ hostname }}"
             ini:
-                - key: filter_title
+                - key: title_mask
                   section: keepass
             env:
-                - name: ANSIBLE_FILTER_TITLE
+                - name: ANSIBLE_TITLE_MASK
 '''
-# TODO Add options keepass_filter_title and keepass_filter_url
+
 try:
     from __main__ import display
 except ImportError:
@@ -130,19 +130,19 @@ class VarsModule(BaseVarsPlugin):
         # Find credentials
         for entity in entities:
             if isinstance(entity, Host):
-                # Try find entry by title
-                entry = kp.find_entries_by_title(entity.name, first=True)
-                if entry is not None:
-                    return self._extract_vars_from_entry(entry)
                 # Try find by keepass_title
                 if entity.vars.get("keepass_title") is not None:
                     entry = kp.find_entries_by_title(entity.vars.get("keepass_title"), first=True)
                     if entry is not None:
                         return self._extract_vars_from_entry(entry)
+                # Try find entry by title
+                entry = kp.find_entries_by_title(entity.name, first=True)
+                if entry is not None:
+                    return self._extract_vars_from_entry(entry)
                 # Try find entry by title with mask
                 # Skip if keepass_filter_title has default value
-                if self.get_option("keepass_filter_title") != "{{ hostname }}":
-                    _title = Environment().from_string(self.get_option("keepass_filter_title")).render(hostname=entity.name)
+                if self.get_option("keepass_title_mask") != "{{ hostname }}":
+                    _title = Environment().from_string(self.get_option("keepass_title_mask")).render(hostname=entity.name)
                     entry = kp.find_entries_by_title(_title, first=True)
                     if entry is not None:
                         return self._extract_vars_from_entry(entry)
