@@ -43,7 +43,7 @@ DOCUMENTATION = '''
                 - name: ANSIBLE_KEEPASS_PASSWORD
                 - name: ANSIBLE_KEEPASS_PASS
         keepass_filter_title:
-            description: If entry not found by hostname, try search by mask. Macroses: {{ hostname }}
+            description: "If entry not found by hostname, try search by mask. Macroses: {{ hostname }}"
             default: "{{ hostname }}"
             ini:
                 - key: filter_title
@@ -65,14 +65,17 @@ from pykeepass import PyKeePass
 from pykeepass.exceptions import CredentialsError, HeaderChecksumError, PayloadChecksumError
 from urllib.parse import urlparse
 import re
+from jinja2 import Environment
+from ..module_utils.keepass_helper import get_entry_path
 
 
 class VarsModule(BaseVarsPlugin):
 
-    REQUIRES_WHITELIST = True
+    REQUIRES_WHITELIST = False
 
     def _extract_vars_from_entry(self, entry):
         vars = {}
+        vars['keepass_entry_path'] = get_entry_path(entry)
         vars['ansible_user'] = entry.username
         vars['ansible_password'] = entry.password
         host_url = entry.url
@@ -130,6 +133,27 @@ class VarsModule(BaseVarsPlugin):
                 # Try find entry by title
                 entry = kp.find_entries_by_title(entity.name, first=True)
                 if entry is not None:
-                    _vars = self._extract_vars_from_entry(entry)
-                    return _vars
+                    return self._extract_vars_from_entry(entry)
+                # Try find by keepass_title
+                if entity.vars.get("keepass_title") is not None:
+                    entry = kp.find_entries_by_title(entity.vars.get("keepass_title"), first=True)
+                    if entry is not None:
+                        return self._extract_vars_from_entry(entry)
+                # Try find entry by title with mask
+                # Skip if keepass_filter_title has default value
+                if self.get_option("keepass_filter_title") != "{{ hostname }}":
+                    _title = Environment().from_string(self.get_option("keepass_filter_title")).render(hostname=entity.name)
+                    entry = kp.find_entries_by_title(_title, first=True)
+                    if entry is not None:
+                        return self._extract_vars_from_entry(entry)
+                # Try find by connection data
+                if entity.vars.get("ansible_host") is not None:
+                    _url = entity.vars.get("ansible_host")
+                    if entity.vars.get("ansible_connection") is not None:
+                        _url = "{}://{}".format(entity.vars.get("ansible_connection"), _url)
+                    if entity.vars.get("ansible_port") is not None:
+                        _url = "{}:{}".format(_url, entity.vars.get("ansible_port"))
+                    entry = kp.find_entries_by_url(_url, regex=True, first=True)
+                    if entry is not None:
+                        return self._extract_vars_from_entry(entry)
         return {}

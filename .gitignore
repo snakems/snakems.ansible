@@ -6,3 +6,5 @@ __pycache__/
 
 #ansiblle-galaxy build
 *.tar.gz
+FILES.json
+MANIFEST.json

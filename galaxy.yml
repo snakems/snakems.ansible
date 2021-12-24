@@ -1,10 +1,10 @@
 namespace: snakems
 name: ansible
-version: 1.0.3
+version: 1.0.4
 readme: README.md
 authors:
 - Mironenko Sergey <sergey@mironenko.pp.ua>
-description: null
+description: ""
 license:
 - GPL-2.0-or-later
 license_file: ''
