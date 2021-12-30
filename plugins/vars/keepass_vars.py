@@ -142,7 +142,7 @@ class VarsModule(BaseVarsPlugin):
                 # Try find entry by title with mask
                 # Skip if keepass_filter_title has default value
                 if self.get_option("keepass_title_mask") != "{{ hostname }}":
-                    _title = Environment().from_string(self.get_option("keepass_title_mask")).render(hostname=entity.name)
+                    _title = Environment(autoescape=True).from_string(self.get_option("keepass_title_mask")).render(hostname=entity.name)
                     entry = kp.find_entries_by_title(_title, first=True)
                     if entry is not None:
                         return self._extract_vars_from_entry(entry)
