@@ -4,7 +4,7 @@
 # Copyright: (c) 2021, Mironenko Sergey <sergey@mironenko.pp.ua>
 # GNU General Public License v3.0+ (see COPYING or https://www.gnu.org/licenses/gpl-3.0.txt)
 
-from __future__ import (absolute_import, division, print_function)
+from __future__ import absolute_import, division, print_function
 
 __metaclass__ = type
 
@@ -55,6 +55,13 @@ DOCUMENTATION = '''
                   section: keepass
             env:
                 - name: ANSIBLE_KEEPASS_ROOT
+        keepass_host_template:
+            description: Hostname title template. Must contain <hostname>
+            ini:
+                - key: host_template
+                  section: keepass
+            env:
+                - name:  ANSIBLE_KEEPASS_HOST_TEMPLATE
 '''
 
 EXAMPLES = '''
@@ -90,19 +97,21 @@ try:
 except ImportError:
     from ansible.utils.display import Display
     display = Display()
-from ansible.errors import AnsibleError
-from ansible.plugins.inventory import BaseInventoryPlugin, Constructable, Cacheable
-from getpass import getpass
-from pykeepass import PyKeePass
-from pykeepass.exceptions import CredentialsError, HeaderChecksumError, PayloadChecksumError
-from urllib.parse import urlparse
 import re
-from ..module_utils.keepass_helper import get_entry_path
+from urllib.parse import urlparse
+from ansible.plugins.inventory import (BaseInventoryPlugin, Cacheable,
+                                       Constructable)
+from pykeepass import PyKeePass
+from ..module_utils.keepass_helper import get_entry_path, init_kp_db_for_inventory
 
 
 class InventoryModule(BaseInventoryPlugin, Constructable, Cacheable):
 
     NAME = 'keepass_inventory'
+
+    def _prepare_options(self):
+        if self.has_option("keepass_host_template") and "<hostname>" in self.get_option("keepass_host_template"):
+            self.set_option("keepass_host_template", self.get_option("keepass_host_template").replace("<hostname>", "(?P<hostname>.*)"))
 
     def _add_host(self, entry, group_name):
         """ Add host with vars to the group """
@@ -112,10 +121,16 @@ class InventoryModule(BaseInventoryPlugin, Constructable, Cacheable):
             for group_var in entry.custom_properties:
                 self.inventory.set_variable(group_name, group_var, entry.custom_properties[group_var])
             return
+        if self.has_option("keepass_host_template"):
+            _title_match_template = re.match(self.get_option("keepass_host_template"), hostname)
+            if _title_match_template is None:
+                return
+            hostname = _title_match_template.group("hostname")
         # Add host to group
         self.inventory.add_host(hostname, group=group_name)
         # Determine and add vars to host
         self.inventory.set_variable(hostname, "keepass_entry_path", get_entry_path(entry))
+        self.inventory.set_variable(hostname, "keepass_entry_title", entry.title)
         self.inventory.set_variable(hostname, "ansible_user", entry.username)
         self.inventory.set_variable(hostname, "ansible_password", entry.password)
         # Determine connection type, host,, port
@@ -146,44 +161,15 @@ class InventoryModule(BaseInventoryPlugin, Constructable, Cacheable):
     def verify_file(self, path):
         ''' return true/false if this is possibly a valid file for this plugin to consume '''
         valid = False
-        if super(InventoryModule, self).verify_file(path):
-            # base class verifies that file exists and is readable by current user
-            if path.endswith(('keepass.yaml', 'keepass.yml', 'keepass_hosts.yaml', 'keepass_hosts.yml')):
-                valid = True
+        if super(InventoryModule, self).verify_file(path) and path.endswith(('keepass.yaml', 'keepass.yml', 'keepass_hosts.yaml', 'keepass_hosts.yml')):
+            valid = True
         return valid
 
     def parse(self, inventory, loader, path, cache=False):
         super(InventoryModule, self).parse(inventory, loader, path, cache)
         self._read_config_data(path)
-        kp = None
-        keepass_pass = ""
-        if self.get_option("keepass_pass") is not None:
-            keepass_pass = self.get_option("keepass_pass")
-        while True:
-            if keepass_pass == "":
-                keepass_pass = getpass(prompt="Enter password for database {}: ".format(self.get_option("keepass_database")))
-            if keepass_pass != "":
-                try:
-                    if self.loader._vault.is_encrypted(self.get_option("keepass_pass")):
-                        if len(self.loader._vault.secrets) > 0:
-                            keepass_pass = self.loader._vault.decrypt(self.get_option("keepass_pass").replace('\\n', '\n')).decode()
-                        else:
-                            raise AnsibleError("'keepass_pass' encrypted by vault, but vault-password not provided. Please use option --ask-vault-password")
-                    if self.get_option("keepass_key") is not None:
-                        kp = PyKeePass(self.get_option("keepass_database"), password=keepass_pass, keyfile=self.get_option("keepass_key"))
-                    else:
-                        kp = PyKeePass(self.get_option("keepass_database"), password=keepass_pass)
-                    break
-                except IOError:
-                    display.error('Could not open the database or keyfile.')
-                except FileNotFoundError:
-                    display.error('Could not open the database or keyfile.')
-                except CredentialsError:
-                    display.error("KeePass credentials not correct")
-                except (HeaderChecksumError, PayloadChecksumError):
-                    display.error('Could not open the database, as the checksum of the database is wrong. This could be caused by a corrupt database.')
-                finally:
-                    keepass_pass = ""
+        self._prepare_options()
+        kp: PyKeePass = init_kp_db_for_inventory(self)
         main_root = kp.find_groups(name=self.get_option("keepass_root"), first=True)
         for group in main_root.subgroups:
             self._add_group(group)
