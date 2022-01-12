@@ -55,6 +55,13 @@ DOCUMENTATION = '''
                   section: keepass
             env:
                 - name: ANSIBLE_KEEPASS_ROOT
+        keepass_host_template:
+            description: Hostname title template. Must contain <hostname>
+            ini:
+                - key: host_template
+                  section: keepass
+            env:
+                - name:  ANSIBLE_KEEPASS_HOST_TEMPLATE
 '''
 
 EXAMPLES = '''
@@ -102,6 +109,10 @@ class InventoryModule(BaseInventoryPlugin, Constructable, Cacheable):
 
     NAME = 'keepass_inventory'
 
+    def _prepare_options(self):
+        if self.has_option("keepass_host_template") and "<hostname>" in self.get_option("keepass_host_template"):
+            self.set_option("keepass_host_template", self.get_option("keepass_host_template").replace("<hostname>", "(?P<hostname>.*)"))
+
     def _add_host(self, entry, group_name):
         """ Add host with vars to the group """
         hostname = entry.title
@@ -110,10 +121,16 @@ class InventoryModule(BaseInventoryPlugin, Constructable, Cacheable):
             for group_var in entry.custom_properties:
                 self.inventory.set_variable(group_name, group_var, entry.custom_properties[group_var])
             return
+        if self.has_option("keepass_host_template"):
+            _title_match_template = re.match(self.get_option("keepass_host_template"), hostname)
+            if _title_match_template is None:
+                return
+            hostname = _title_match_template.group("hostname")
         # Add host to group
         self.inventory.add_host(hostname, group=group_name)
         # Determine and add vars to host
         self.inventory.set_variable(hostname, "keepass_entry_path", get_entry_path(entry))
+        self.inventory.set_variable(hostname, "keepass_entry_title", entry.title)
         self.inventory.set_variable(hostname, "ansible_user", entry.username)
         self.inventory.set_variable(hostname, "ansible_password", entry.password)
         # Determine connection type, host,, port
@@ -151,6 +168,7 @@ class InventoryModule(BaseInventoryPlugin, Constructable, Cacheable):
     def parse(self, inventory, loader, path, cache=False):
         super(InventoryModule, self).parse(inventory, loader, path, cache)
         self._read_config_data(path)
+        self._prepare_options()
         kp: PyKeePass = init_kp_db_for_inventory(self)
         main_root = kp.find_groups(name=self.get_option("keepass_root"), first=True)
         for group in main_root.subgroups:

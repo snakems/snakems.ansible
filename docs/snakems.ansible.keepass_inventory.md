@@ -19,6 +19,7 @@ keepass_database|Yes|ini entries:<br />[keepass]<br />database = VALUE<br /><br 
 keepass_key|No|ini entries:<br />[keepass]<br />key = VALUE<br /><br />env: ANSIBLE_KEEPASS_KEY|Path to key-file.
 keepass_pass|No|ini entries:<br />[keepass]<br />password = VALUE<br /><br />env: ANSIBLE_KEEPASS_PASSWORD<br />env: ANSIBLE_KEEPASS_PASS|Pasword for KeePass database. If not set, it will be prompted 
 keepass_root|Yes|ini entries:<br />[keepass]<br />root = VALUE<br /><br />env: ANSIBLE_KEEPASS_ROOT|Directory in KeePass Database from which to take hosts
+keepass_host_template|No|ini entries:<br />[keepass]<br />host_template = VALUE<br /><br />env: ANSIBLE_KEEPASS_HOST_TEMPLATE|Hostname title template. Must contain \<hostname\>
 
 ## Using
 ### Config ansible.cfg
@@ -68,6 +69,7 @@ database = test.kdbx
 key = test.key
 root = ansible
 password = "$ANSIBLE_VAULT;1.1;AES256\n35303030656130...6662"
+host_template = ssh_<hostname>
 ```
 ### KeePass Database
 ![Keepass Database example](screenshots/keepass_inventory.gif)
